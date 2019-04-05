@@ -55,7 +55,7 @@ def main():
 
     motion.post.angleInterpolation(
         ["HeadYaw"],
-        [1.0,-1.0],
+        [1.0, -1.0],
         [1, 2],
         False
     )

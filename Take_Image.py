@@ -1,44 +1,62 @@
 # -*- encoding: UTF-8 -*-
+# Get an image from NAO. Display it and save it using PIL.
 
-# This is just an example script that shows how images can be accessed
-# through ALVideoDevice in python.
-# Nothing interesting is done with the images in this example.
+import sys
+import time
+
+# Python Image Library
+from PIL import Image
 
 from naoqi import ALProxy
-import vision_definitions
 
-IP = "192.168.0.115"  # Replace here with your NAOqi's IP address.
-PORT = 9559
 
-####
-# Create proxy on ALVideoDevice
+def showNaoImage(IP, PORT):
+    """
+    First get an image from Nao, then show it on the screen with PIL.
+    """
 
-print "Creating ALVideoDevice proxy to ", IP
+    camProxy = ALProxy("ALVideoDevice", IP, PORT)
+    resolution = 2    # VGA
+    colorSpace = 11   # RGB
 
-camProxy = ALProxy("ALVideoDevice", IP, PORT)
+    videoClient = camProxy.subscribe("python_client", resolution, colorSpace, 5)
 
-####
-# Register a Generic Video Module
+    t0 = time.time()
 
-resolution = vision_definitions.kQVGA
-colorSpace = vision_definitions.kYUVColorSpace
-fps = 30
+    # Get a camera image.
+    # image[6] contains the image data passed as an array of ASCII chars.
+    naoImage = camProxy.getImageRemote(videoClient)
 
-nameId = camProxy.subscribe("python_GVM", resolution, colorSpace, fps)
-print nameId
+    t1 = time.time()
 
-print 'getting images in local'
-for i in range(0, 20):
-    camProxy.getImageLocal(nameId)
-    camProxy.releaseImage(nameId)
+    # Time the image transfer.
+    print "acquisition delay ", t1 - t0
 
-resolution = vision_definitions.kQQVGA
-camProxy.setResolution(nameId, resolution)
+    camProxy.unsubscribe(videoClient)
 
-print 'getting images in remote'
-for i in range(0, 20):
-    camProxy.getImageRemote(nameId)
+    # Now we work with the image returned and save it as a PNG  using ImageDraw
+    # package.
 
-camProxy.unsubscribe(nameId)
+    # Get the image size and pixel array.
+    imageWidth = naoImage[0]
+    imageHeight = naoImage[1]
+    array = naoImage[6]
 
-print 'end of gvm_getImageLocal python script'
+    # Create a PIL Image from our pixel array.
+    image = Image.frombytes("RGB", (imageWidth, imageHeight), array)
+
+    # Save the image.
+    image.save("C:\Users\OBayon\PycharmProjects\NAO\Photos_Reco\camImage.png", "PNG")
+    image.show()
+
+
+if __name__ == '__main__':
+    IP = "192.168.0.115"  # Replace here with your NaoQi's IP address.
+    PORT = 9559
+    naoImage = showNaoImage(IP, PORT)
+
+    # Read IP address from first argument if any.
+    #if len(sys.argv) > 1:
+        #IP = sys.argv[1]
+
+        #naoImage = showNaoImage(IP, PORT)
