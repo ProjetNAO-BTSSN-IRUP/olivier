@@ -23,13 +23,13 @@ def showNaoImage(IP, PORT):
 
     t0 = time.time()
 
-    # Get a camera image.
-    # image[6] contains the image data passed as an array of ASCII chars.
+    # Recupère l'image depuis la cam du Robot NAO
+    # image[6] contient les caractères ASCII d
     naoImage = camProxy.getImageRemote(videoClient)
 
     t1 = time.time()
 
-    # Time the image transfer.
+    # temps d'acquisition pour l'image
     print "acquisition delay ", t1 - t0
 
     camProxy.unsubscribe(videoClient)

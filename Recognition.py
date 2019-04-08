@@ -39,7 +39,7 @@ class myModule(ALModule):
 broker = ALBroker("pythonBroker", PC_IP,9999, NAO_IP,9559)
 pythonModule = myModule(moduleName)
 
-# Create a proxy to ALMemory
+# Crée le proxy "ALMemory
 try:
     memoryProxy = ALProxy("ALMemory", NAO_IP, PORT)
 except RuntimeError,e:
@@ -53,9 +53,7 @@ except RuntimeError,e:
     print "Error when subscribing to micro event"
     exit(1)
 
-# Let the picture recognition run for a little while (will stop after 'count' calls of the callback).
-# You can check the results using a browser connected on your Nao, then
-# Advanced -> Memory -> type PictureDetected in the field
+# L'Image peut être recup sur le Site "ipNao/Advanced" (Le site ne marche plus)
 
 while count>0:
     time.sleep(1)
