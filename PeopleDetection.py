@@ -2,12 +2,8 @@
 import sys
 import time
 
-# Python Image Library
 from PIL import Image
-
-import naoqi
 from naoqi import ALProxy
-
 
 
 class PeoplePerception(object):
@@ -15,47 +11,54 @@ class PeoplePerception(object):
     def __init__(self, IP, PORT):
         self.proxy = None
 
+        print "FaceDetection"
+        print"***********************************"
+        self.SetPpl(IP, PORT)
+        print ""
+
         print "PeoplePerception"
         print "**********************************"
         self.NewPpl(IP, PORT)
         print ""
 
-        print "FaceDetection"
-        print"***********************************"
-        self.RecoPpl(IP, PORT)
-        print ""
-
-        print self.proxy.getSubscribersInfo()
-
     def NewPpl(self, IP, PORT):
-        if not self.proxy:
-            self.proxy = ALProxy("ALPeoplePerception", IP, PORT)
-            self.proxy.subscribe("PeoplePerception", 500, 0.0)
+        self.faceproxy = ALProxy("ALPeoplePerception", IP, PORT)
+        self.faceproxy.subscribe("PeoplePerception", 500, 0.0)
 
-        print self.proxy.isFaceDetectionEnabled()
-        if self.proxy.PeopleDetected is True:
-            print "Detected"
-        else:
-            print "nada"
+        print self.faceproxy.isFaceDetectionEnabled()
+        for i in range(10):
+            print i
+            if self.faceproxy.PeopleDetected:
+                print "Detected"
+                print
+            else:
+                print "nada"
+            i = i + 1
 
-        print self.proxy.PeopleList
+        print self.faceproxy.PeopleList
 
-        self.proxy.unsubscribe
+        self.faceproxy.unsubscribe
 
-    def RecoPpl(self, IP, PORT):
-        self.proxy = ALProxy("ALFaceDetection", IP, PORT)
-        self.proxy.subscribe("FaceDetection", 5000, 00)
+    def SetPpl(self, IP, PORT):
+        self.peopleproxy = ALProxy("ALFaceDetection", IP, PORT)
+        self.peopleproxy.subscribe("FaceDetection", 500, 00)
 
-        self.proxy.setRecognitionEnabled = True
-        print self.proxy.isRecognitionEnabled()
+        self.peopleproxy.setRecognitionEnabled = True
+        print self.peopleproxy.isRecognitionEnabled()
 
-        self.proxy.setTrackingEnabled = True
-        print self.proxy.isTrackingEnabled()
+        if not self.peopleproxy.isTrackingEnabled() :
+            self.peopleproxy.setTrackingEnabled = True
 
-        print self.proxy.getLearnedFacesList()
-        print self.proxy.learnFace("Nicolas")
+        print self.peopleproxy.isTrackingEnabled()
 
-        print self.proxy.FaceDetected
+        print self.peopleproxy.getLearnedFacesList()
+        print self.peopleproxy.learnFace("Olivier")
+
+        self.peopleproxy.unsubscribe
+
+    def getData(self, IP, PORT):
+
+        self.memproxy = ALProxy("ALFaceDetection", IP, PORT)
 
 
 PeoplePerception("192.168.0.115", 9559)
