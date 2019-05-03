@@ -13,7 +13,7 @@ class PeoplePerception(object):
 
         print "FaceDetection"
         print"***********************************"
-        self.SetPpl(IP, PORT)
+        # self.SetPpl(IP, PORT)
         print ""
 
         print "PeoplePerception"
@@ -22,43 +22,59 @@ class PeoplePerception(object):
         print ""
 
     def NewPpl(self, IP, PORT):
-        self.faceproxy = ALProxy("ALPeoplePerception", IP, PORT)
-        self.faceproxy.subscribe("PeoplePerception", 500, 0.0)
+        # faceproxy = ALProxy("ALPeoplePerception", IP, PORT)
 
-        print self.faceproxy.isFaceDetectionEnabled()
-        for i in range(10):
-            print i
-            if self.faceproxy.PeopleDetected:
-                print "Detected"
-                print
+        faceproxy = ALProxy("ALFaceDetection", IP, PORT)
+        faceproxy.subscribe("Test_Face", 500, 0.0)
+
+        memory = ALProxy("ALMemory", IP, PORT)
+        memValue = "FaceDetected"
+
+
+        for i in range(0, 20):
+            time.sleep(0.5)
+            face = memory.getData(memValue)
+
+            print ""
+            print "*****"
+            print ""
+
+            # Check whether we got a valid output.
+            if face and isinstance(face, list) and len(face) >= 2:
+
+                # We detected faces !
+                # For each face, we can read its shape info and ID.
+
+                # First Field = TimeStamp.
+                timeStamp = face[0]
+                if timeStamp:
+                    print time
+
+                # Second Field = array of face_Info's.
+                faceInfoArray = face[1]
+
+                try:
+                    # Browse the faceInfoArray to get info on each detected face.
+                    for j in range(len(faceInfoArray) - 1):
+                        faceInfo = faceInfoArray[j]
+
+
+                        # First Field = Shape info.
+                        faceShapeInfo = faceInfo[0]
+
+                        # Second Field = Extra info (empty for now).
+                        faceExtraInfo = faceInfo[1]
+
+                        print faceInfo
+                        print "  alpha %.3f - beta %.3f" % (faceShapeInfo[1], faceShapeInfo[2])
+                        print "  width %.3f - height %.3f" % (faceShapeInfo[3], faceShapeInfo[4])
+
+                except Exception, e:
+                    print "faces detected, but it seems getData is invalid. ALValue ="
+                    print face
+                    print "Error msg %s" % (str(e))
             else:
-                print "nada"
-            i = i + 1
-
-        print self.faceproxy.PeopleList
-
-        self.faceproxy.unsubscribe
-
-    def SetPpl(self, IP, PORT):
-        self.peopleproxy = ALProxy("ALFaceDetection", IP, PORT)
-        self.peopleproxy.subscribe("FaceDetection", 500, 00)
-
-        self.peopleproxy.setRecognitionEnabled = True
-        print self.peopleproxy.isRecognitionEnabled()
-
-        if not self.peopleproxy.isTrackingEnabled() :
-            self.peopleproxy.setTrackingEnabled = True
-
-        print self.peopleproxy.isTrackingEnabled()
-
-        print self.peopleproxy.getLearnedFacesList()
-        print self.peopleproxy.learnFace("Olivier")
-
-        self.peopleproxy.unsubscribe
-
-    def getData(self, IP, PORT):
-
-        self.memproxy = ALProxy("ALFaceDetection", IP, PORT)
+                print "No face detected"
 
 
 PeoplePerception("192.168.0.115", 9559)
