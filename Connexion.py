@@ -6,9 +6,11 @@ import MySQLdb
 
 
 class Conn:
-    def __init__(self):
+    def __init__(self, pNom, pLargeur, pHauteur, pExtraInfo = ""):
 
-        db = MySQLdb.connect(host="SRV-NAO",  # your host
+        localhost = "127.0.0.1"
+        SRV_NAO = "192.168.0.19"
+        db = MySQLdb.connect(host=localhost,  # your host
                              user="olivier",  # username
                              passwd="olivier",  # password
                              db="olivier")  # name of the database
@@ -17,9 +19,21 @@ class Conn:
         self.cur = db.cursor()
 
         # Select data from table using SQL query.
-        self.cur.execute("SELECT * FROM faciale")
+        if (pNom != "") and (pLargeur != "") and (pHauteur != ""):
+            if pExtraInfo == "":
+                self.cur.execute("SELECT `InfoPersonne`, `idFaciale`, `Largeur_Visage`, `Hauteur_Visage`,"
+                                 "`Extra_Info`, `idApprenant`, `idProfesseur` "
+                                 "FROM `faciale` WHERE `InfoPersonne` = '" + pNom + "' AND `Largeur_Visage` = '" + pLargeur + "' AND `Hauteur_Visage` = '" + pHauteur + "' ")
+            else:
+                self.cur.execute("SELECT `InfoPersonne`, `idFaciale`, `Largeur_Visage`, `Hauteur_Visage`,"
+                                 "`Extra_Info`, `idApprenant`, `idProfesseur` "
+                                 "FROM `faciale` WHERE `InfoPersonne` = '" + pNom + "' AND `Largeur_Visage` = '" + pLargeur + "' AND `Hauteur_Visage` = '" + pHauteur + "' AND `Extra_Info` = '" + pExtraInfo + "' ")
 
-    def get_all(self):
+    def InsertInfo(self, pNom, pLargeur, pHauteur, pExtraInfo = ""):
+        self.cur.execute("INSERT INTO faciale(`InfoPersonne`,`Largeur_Visage`, `Hauteur_Visage`, `Extra_Info` ,`idApprenant` ,`idProfesseur`) "
+                         "VALUES (pNom, pLargeur, pHauteur, pExtraInfo, idApprenant, idProfesseur)")
+
+    def RecupVal(self):
         i = 0
         rc = self.cur.rowcount
         for row in self.cur.fetchall():
@@ -34,38 +48,8 @@ class Conn:
                 print "***************"
                 i += 1
 
-    def get_one(self, nom_col):
-        id_faciale = 0
-        photo = 1
-        id_app = 2
-        id_int = 3
-        col = 0
-
-        if nom_col == "id_faciale":
-            col = id_faciale
-        elif nom_col == "photo":
-            col = photo
-        elif nom_col == "id_app":
-            col = id_app
-        elif nom_col == "id_int":
-            col = id_int
-
-        for row in self.cur.fetchall():
-
-            print "***************"
-            print ""
-            print row[col]
-            print ""
-            print "***************"
-
-            return row[col]
-
 
 print "/*/*/*/*/*/*/*/*/*/"
 print ("TABLE FACIALE")
 Conn().get_all()
-print "/*/*/*/*/*/*/*/*/*/"
-print "/*/*/*/*/*/*/*/*/*/"
-print ("COLONNE PHOTO")
-Conn().get_one("photo")
 print "/*/*/*/*/*/*/*/*/*/"

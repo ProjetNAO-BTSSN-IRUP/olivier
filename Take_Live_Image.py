@@ -96,7 +96,8 @@ class ImageWidget(QWidget):
 
 
 if __name__ == '__main__':
-    IP = "192.168.0.115"  # Replace here with your NaoQi's IP address.
+    # IP = "192.168.0.115"  # Replace here with your NaoQi's IP address.
+    IP = "192.168.1.43"
     PORT = 9559
     CameraID = 0
 

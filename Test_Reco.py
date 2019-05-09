@@ -14,7 +14,7 @@ ALMEMORY_KEY_NAMES = [
 "Device/SubDeviceList/HeadYaw/Position/Actuator/Value",
 ]
 
-ROBOT_IP = "192.168.0.115"
+ROBOT_IP = "192.168.1.43"
 
 
 def record_data(nao_ip):
@@ -55,7 +55,7 @@ def main():
 
     motion.post.angleInterpolation(
         ["HeadYaw"],
-        [1.0, -1.0],
+        [3.0, -3.0],
         [1, 2],
         False
     )

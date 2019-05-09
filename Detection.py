@@ -1,92 +1,75 @@
-# -*- encoding: UTF-8 -*-
-# This test demonstrates how to use the ALFaceDetection module.
-# Note that you might not have this module depending on your distribution
-#
-# - We first instantiate a proxy to the ALFaceDetection module
-#     Note that this module should be loaded on the robot's naoqi.
-#     The module output its results in ALMemory in a variable
-#     called "FaceDetected"
-
-# - We then read this ALMemory value and check whether we get
-#   interesting things.
-
+import sys
 import time
 
+from PIL import Image
 from naoqi import ALProxy
 
-IP = "192.168.0.115"  # Replace here with your NaoQi's IP address.
-PORT = 9559
 
-# Create a proxy to ALFaceDetection
-try:
-    faceProxy = ALProxy("ALFaceDetection", IP, PORT)
-except Exception, e:
-    print "Error when creating face detection proxy:"
-    print str(e)
-    exit(1)
+class PeoplePerception(object):
 
-# Subscribe to the ALFaceDetection proxy
-# This means that the module will write in ALMemory with
-# the given period below
-period = 500
-faceProxy.subscribe("Test_Face", period, 0.0 )
+    def __init__(self, IP, PORT):
+        self.proxy = None
 
-# ALMemory variable where the ALFacedetection modules
-# outputs its results
-memValue = "FaceDetected"
+        print " Processus de reconnaissance : Demarrage"
+        self.NewPpl(IP, PORT)
 
-# Create a proxy to ALMemory
-try:
-    memoryProxy = ALProxy("ALMemory", IP, PORT)
-except Exception, e:
-    print "Error when creating memory proxy:"
-    print str(e)
-    exit(1)
+    def NewPpl(self, IP, PORT):
+
+        faceproxy = ALProxy("ALFaceDetection", IP, PORT)
+        faceproxy.subscribe("Test_Face", 500, 0.0)
+
+        memory = ALProxy("ALMemory", IP, PORT)
+        memValue = "FaceDetected"
 
 
-# A simple loop that reads the memValue and checks whether faces are detected.
-for i in range(0, 20):
-    time.sleep(0.5)
-    val = memoryProxy.getData(memValue)
+        for i in range(0, 20):
+            time.sleep(0.5)
+            face = memory.getData(memValue)
 
-    print ""
-    print "*****"
-    print ""
+            print ""
+            print "*****"
+            print ""
 
-    # Check whether we got a valid output..
-    if (val and isinstance(val, list))and len(val) >= 2:
-        # We detected faces !
-        # For each face, we can read its shape info and ID.
+            # Verification lorsque que la donnee renvoyer est correcte
+            if face and isinstance(face, list) and len(face) >= 2:
 
-        # First Field = TimeStamp.
-        timeStamp = val[0]
+                # Visage detecte
+                # Pour chaque visage, les valeurs de ce derniers sont recuperer
 
-        # Second Field = array of face_Info's
-        faceInfoArray = val[1]
+                # Premier champ = Valeur de temps
+                timeStamp = face[0]
 
-        try:
-            # Browse the faceInfoArray to get info on each detected face.
-            for j in range( len(faceInfoArray)-1 ):
-                faceInfo = faceInfoArray[j]
+                # Deuxieme champ = Face Info.
+                faceInfoArray = face[1]
 
-                # First Field = Shape info.
-                faceShapeInfo = faceInfo[0]
-
-                # Second Field = Extra info (empty for now).
-                faceExtraInfo = faceInfo[1]
-
-            print "  alpha %.3f - beta %.3f" % (faceShapeInfo[1], faceShapeInfo[2])
-            print "  width %.3f - height %.3f" % (faceShapeInfo[3], faceShapeInfo[4])
-
-        except Exception, e:
-            print "faces detected, but it seems getData is invalid. ALValue ="
-            print val
-            print "Error msg %s" % (str(e))
-    else:
-        print "No face detected"
+                try:
+                    # Pour recuperer chaque valeur de chaque visage rencontre
+                    for j in range(len(faceInfoArray) - 1):
+                        faceInfo = faceInfoArray[j]
 
 
-# Unsubscribe the module.
-faceProxy.unsubscribe("Test_Face")
+                        # Premier champ = info de forme
+                        faceShapeInfo = faceInfo[0]
 
-print "Test terminated successfully."
+                        # Second champ = info bonus
+                        faceExtraInfo = faceInfo[1]
+
+                        print faceInfo
+                        print "  Dist %.3f - Angle %.3f" % (faceShapeInfo[1], faceShapeInfo[2])  # Valeur de distane et d'angle de vue entre le robot et le visage
+                        print "  Largeur %.3f - Hauteur %.3f" % (faceShapeInfo[3], faceShapeInfo[4]) # Valeur de largeur et de hauteur du visage dectecte
+
+                        if faceExtraInfo[2] != "":
+                            print " Nom = %s" % (faceExtraInfo[2])
+                        else:
+                            print " Personne inconnu du systemes"
+
+                except Exception, e:
+                    print "Visage dectecte mais donnee invalide. ALValue ="
+                    print face
+                    print "Message d'erreur %s" % (str(e))
+            else:
+                print "Pas de visage detecte"
+
+
+# PeoplePerception("192.168.0.115", 9559)
+PeoplePerception("192.168.1.43", 9559)
