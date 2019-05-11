@@ -33,23 +33,18 @@ class Conn:
         self.cur.execute("INSERT INTO faciale(`InfoPersonne`,`Largeur_Visage`, `Hauteur_Visage`, `Extra_Info` ,`idApprenant` ,`idProfesseur`) "
                          "VALUES (pNom, pLargeur, pHauteur, pExtraInfo, idApprenant, idProfesseur)")
 
-    def RecupVal(self):
+    def RecupVal(self, num_col):
         i = 0
         rc = self.cur.rowcount
-        for row in self.cur.fetchall():
+        print rc
+        #for row in self.cur.fetchall():
 
-            while i < rc:
+        # while i < rc:
 
-                print "***************"
-                print rc
-                print ""
-                print row[i]
-                print ""
-                print "***************"
-                i += 1
-
-
-print "/*/*/*/*/*/*/*/*/*/"
-print ("TABLE FACIALE")
-Conn().get_all()
-print "/*/*/*/*/*/*/*/*/*/"
+        # print "***************"
+        # print rc
+        # print ""
+        # print row[i]
+        # print ""
+        # print "***************"
+        # i += 1
