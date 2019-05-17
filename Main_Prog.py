@@ -1,16 +1,17 @@
 # Initialisation des librairies/modules
 import sys
 import time
-import MySQLdb
-import socket
 
-from PIL import Image
+import Recognition_Faciale
+import Recognition_QRCode
+import Connexion_Sql
+import audio_response
+
 from naoqi import ALProxy
 from naoqi import ALBroker
 from naoqi import ALModule
 
 from optparse import OptionParser
-
 # # # # # # # # #Definition du code
 
 
@@ -27,9 +28,7 @@ class HumanGreeterModule(ALModule):
         # Subscribe FaceDetected event:
         global memory
         memory = ALProxy("ALMemory")
-        memory.subscribeToEvent("FaceDetected",
-            "HumanGreeter",
-            "onFaceDetected")
+        memory.subscribeToEvent("FaceDetected", "HumanGreeter", "onFaceDetected")
 
     def onFaceDetected(self, *_args):
         """
@@ -37,116 +36,76 @@ class HumanGreeterModule(ALModule):
         """
 
         # Unsubcribe pour eviter les repetitions
-        memory.unsubscribeToEvent("FaceDetected",
-            "HumanGreeter")
+        memory.unsubscribeToEvent("FaceDetected", "HumanGreeter")
 
-        # Le processus qui sera appeler a chaque visage detecte
+        # Le processus qui sera appeler a chaque visage detecte*
 
+        faceshapeinfo, nom_personne, faceextrainfo, verif = Recognition_Faciale.PeoplePerception(ip_bts, port).RecoVisage(ip_bts, port)
+
+        if faceshapeinfo != "":
+            faceshapeinfo[1] = round(faceshapeinfo[1], 3)
+            print faceshapeinfo[1]
+            faceshapeinfo[2] = round(faceshapeinfo[2], 3)
+            print faceshapeinfo[2]
+            faceshapeinfo[3] = round(faceshapeinfo[3], 3)
+            print faceshapeinfo[3]
+            faceshapeinfo[4] = round(faceshapeinfo[4], 3)
+            print faceshapeinfo[4]
+
+        print verif
+        print''
+        if verif:
+            valreq = Connexion_Sql.Conn("192.168.0.19",nom_personne, faceshapeinfo[3], faceshapeinfo[4], "").RecupVal(2)
+
+            if valreq != "":
+                print valreq
+                audio_response.Response(ip_bts, port)
+            else:
+                essaie += essaie
+
+        elif essaie == 2:
+            Recognition_QRCode.QRCode().qr_code_recognition(ip_bts, port)
+
+        time.sleep(10)
 
         # Subscribe pour recommencer
-        memory.subscribeToEvent("FaceDetected",
-            "HumanGreeter",
-            "onFaceDetected")
-
-
-class PeoplePerception(object):
-
-    def __init__(self, IP, PORT):
-        self.proxy = None
-
-        print " Processus de reconnaissance : Demarrage"
-        self.RecoVisage(IP, PORT)
-
-    def RecoVisage(self, IP, PORT):
-
-        faceproxy = ALProxy("ALFaceDetection", IP, PORT)
-        faceproxy.subscribe("Test_Face", 500, 0.0)
-
-        memory = ALProxy("ALMemory", IP, PORT)
-        memValue = "FaceDetected"
-
-
-        for i in range(0, 20):
-            time.sleep(0.5)
-            face = memory.getData(memValue)
-
-            print ""
-            print "*****"
-            print ""
-
-            # Verification lorsque que la donnee renvoyer est correcte
-            if face and isinstance(face, list) and len(face) >= 2:
-
-                # Visage detecte
-                # Pour chaque visage, les valeurs de ce derniers sont recuperer
-
-                # Premier champ = Valeur de temps
-                timeStamp = face[0]
-
-                # Deuxieme champ = Face Info.
-                faceInfoArray = face[1]
-
-                try:
-                    # Pour recuperer chaque valeur de chaque visage rencontre
-                    for j in range(len(faceInfoArray) - 1):
-                        faceInfo = faceInfoArray[j]
-
-                        # Premier champ = info de forme
-                        faceShapeInfo = faceInfo[0]
-
-                        # Second champ = info bonus
-                        faceExtraInfo = faceInfo[1]
-
-                        print faceInfo
-                        print "  Dist %.3f - Angle %.3f" % (faceShapeInfo[1], faceShapeInfo[2])  # Valeur de distane et d'angle de vue entre le robot et le visage
-                        print "  Largeur %.3f - Hauteur %.3f" % (faceShapeInfo[3], faceShapeInfo[4]) # Valeur de largeur et de hauteur du visage dectecte
-
-                        if faceExtraInfo[2] != "":
-                            nom_personne = faceExtraInfo[2]
-                            print " Nom = %s" % (faceExtraInfo[2])
-                        else:
-                            print " Personne inconnu du systemes"
-
-                except Exception, e:
-                    print "Visage dectecte mais donnee invalide. ALValue ="
-                    print face
-                    print "Message d'erreur %s" % (str(e))
-            else:
-                print "Pas de visage detecte"
+        memory.subscribeToEvent("FaceDetected", "HumanGreeter", "onFaceDetected")
 
 
 def main():
     """
     Main entry point
     """
-
     # Variables Globale
-    global memory
+    global port
+    global ip_bts
+    global ip_home
     global HumanGreeter
-    global faceInfo
-    global faceShapeInfo
-    global faceExtraInfo
-    global nom_personne
-    global timeStamp
-    global PORT
-    global IP_BTS
-    global IP_Home
+    global essaie
 
-    IP_Home = "192.168.1.43"
-    IP_BTS = "192.168.0.115"
-    PORT = 9559
+    HumanGreeter = None
+    # faceInfo = None
+    # faceShapeInfo = None
+    # faceExtraInfo = None
+    # nom_personne = None
+    # timeStamp = None
+    # global ValReq
+
+    ip_home = "192.168.1.43"
+    ip_bts = "192.168.0.115"
+    port = 9559
 
     parser = OptionParser()
     parser.add_option("--pip",
-                      help=IP_Home,
+                      help=ip_bts,
                       dest="pip")
     parser.add_option("--pport",
-                      help=PORT,
+                      help=port,
                       dest="pport",
                       type="int")
     parser.set_defaults(
-        pip=IP_Home,
-        pport=9559)
+        pip=ip_bts,
+        pport=port)
 
     (opts, args_) = parser.parse_args()
     pip = opts.pip
